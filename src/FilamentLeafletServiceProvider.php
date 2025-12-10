@@ -45,7 +45,9 @@ class FilamentLeafletServiceProvider extends PackageServiceProvider
     {
         return [
             Css::make('leaflet', __DIR__ . '/../resources/dist/leaflet/leaflet.css'),
+            Css::make('markercluster', __DIR__ . '/../resources/dist/leaflet/markercluster.css'),
             Js::make('leaflet', __DIR__ . '/../resources/dist/leaflet/leaflet.js'),
+            Js::make('markercluster', __DIR__ . '/../resources/dist/leaflet/markercluster.js'),
         ];
     }
 }

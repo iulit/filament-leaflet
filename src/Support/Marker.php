@@ -351,6 +351,7 @@ class Marker implements Arrayable, Jsonable
             'draggable' => $this->isDraggable,
             'title' => $this->label,
             'group' => $this->group,
+            'type' => 'marker',
             'popupContent' => $this->popupContent,
             'popupData' => $this->popupData,
             'popupOptions' => $this->popupOptions,

@@ -218,50 +218,83 @@
                     if (!this.config.markers?.length) return;
 
                     this.config.markers.forEach(data => {
-                        if (!data.lat || !data.lng) {
-                            console.warn('Marker sem coordenadas:', data);
-                            return;
-                        }
-
-                        const marker = L.marker([data.lat, data.lng], {
-                            icon: this.createIcon(data),
-                            title: data.title || '',
-                            draggable: data.draggable || false
-                        });
-
-                        if (data.title || data.popupContent) {
-                            marker.bindPopup(this.createPopupContent(data), data.popupOptions);
-                        }
-
-                        if (data.tooltip) {
-                            marker.bindTooltip(data.tooltip.content || data.tooltip, {
-                                permanent: data.tooltip.permanent || false,
-                                direction: data.tooltip.direction || 'auto',
-                                ...(data.tooltip.options || {})
-                            });
-                        }
-
-                        marker.on('click', () => @this.onMarkerClick(data.id));
-
-                        if (data.group) {
-                            this.markerGroups[data.group] = this.markerGroups[data.group] || L
-                                .layerGroup();
-                            this.markerGroups[data.group].addLayer(marker);
+                        if (data.type === 'cluster') {
+                            this.addCluster(data);
                         } else {
-                            marker.addTo(this.map);
+                            this.addSingleMarker(data);
                         }
-
-                        this.markerLayers.push({
-                            marker,
-                            data
-                        });
                     });
 
-                    // Add all groups to map
+                    // Add all groups/clusters to map
                     Object.values(this.markerGroups).forEach(group => group.addTo(this.map));
-
-                    // Initialize the Layer Control
                     this.setupLayerControl();
+                },
+
+                addCluster(clusterData) {
+                    const cluster = L.markerClusterGroup(clusterData.config || {});
+
+                    if (!clusterData.markers?.length) return;
+
+                    clusterData.markers.forEach(markerData => {
+                        const marker = this.createMarkerLayer(markerData);
+                        if (!marker) return;
+
+                        cluster.addLayer(marker);
+                    });
+
+                    if (clusterData.group) {
+                        this.markerGroups[clusterData.group] = this.markerGroups[clusterData.group] || L.layerGroup();
+                        this.markerGroups[clusterData.group].addLayer(cluster);
+                    } else {
+                        cluster.addTo(this.map);
+                    }
+
+                },
+
+                addSingleMarker(data) {
+                    const marker = this.createMarkerLayer(data);
+                    if (!marker) return;
+
+                    if (data.group) {
+                        this.markerGroups[data.group] = this.markerGroups[data.group] || L.layerGroup();
+                        this.markerGroups[data.group].addLayer(marker);
+                    } else {
+                        marker.addTo(this.map);
+                    }
+                },
+
+                createMarkerLayer(data) {
+                    if (!data.lat || !data.lng) {
+                        console.warn('Marker sem coordenadas:', data);
+                        return null;
+                    }
+
+                    const marker = L.marker([data.lat, data.lng], {
+                        icon: this.createIcon(data),
+                        title: data.title || '',
+                        draggable: data.draggable || false
+                    });
+
+                    if (data.title || data.popupContent) {
+                        marker.bindPopup(this.createPopupContent(data), data.popupOptions);
+                    }
+
+                    if (data.tooltip) {
+                        marker.bindTooltip(data.tooltip.content || data.tooltip, {
+                            permanent: data.tooltip.permanent || false,
+                            direction: data.tooltip.direction || 'auto',
+                            ...(data.tooltip.options || {})
+                        });
+                    }
+
+                    marker.on('click', () => @this.onMarkerClick(data.id));
+
+                    this.markerLayers.push({
+                        marker,
+                        data: data
+                    });
+
+                    return marker;
                 },
 
                 setupLayerControl() {
