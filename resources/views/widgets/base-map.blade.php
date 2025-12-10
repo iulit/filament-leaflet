@@ -2,6 +2,7 @@
     $config = $this->getWidgetData();
     $widgetId = $this->getId();
     $mapId = "mapa-{$widgetId}";
+    $imgsPath = '/vendor/filament-leaflet/images';
 @endphp
 
 
@@ -77,6 +78,13 @@
             text-decoration: underline;
         }
 
+        /* Target the layer control button inside your specific map widget */
+        #{{ $mapId }} .leaflet-control-layers-toggle {
+            background-image: url('{{ $imgsPath }}/layers-2x.png') !important;
+            background-size: 26px 26px;
+            background-position: center;
+        }
+
         {!! $this->getCustomStyles() !!}
     </style>
 
@@ -92,20 +100,18 @@
                 markerGroups: {},
                 geoJsonLayer: null,
                 info: null,
+                layerControl: null,
 
                 init() {
                     this.createMap();
                     this.addTileLayer();
 
-                    if (this.config.geoJsonData.length) {
+                    if (this.config.geoJsonData?.length) {
                         this.setupInfoControl();
                         this.loadGeoJson();
                     }
 
-                    if (this.config.markers.length) {
-                        this.addMarkers();
-                    }
-
+                    this.addMarkers();
                     this.setupEventHandlers();
                     this.setupLivewireListeners();
                     this.map.invalidateSize();
@@ -184,7 +190,7 @@
                                         .properties),
                                     mouseout: () => this.info?.update(),
                                     click: (e) => this.map.fitBounds(e.target
-                                    .getBounds())
+                                        .getBounds())
                                 });
                             }
                         }).addTo(this.map);
@@ -195,7 +201,7 @@
 
                 getFeatureStyle(feature) {
                     const values = Object.values(this.config.geoJsonData);
-                    const percentage = feature.properties.density / Math.max(values);
+                    const percentage = feature.properties.density / Math.max(...values);
                     const index = Math.max(0, Math.ceil(percentage * this.config.geoJsonColors.length) - 1);
 
                     return {
@@ -251,7 +257,19 @@
                         });
                     });
 
+                    // Add all groups to map
                     Object.values(this.markerGroups).forEach(group => group.addTo(this.map));
+
+                    // Initialize the Layer Control
+                    this.setupLayerControl();
+                },
+
+                setupLayerControl() {
+                    if (Object.keys(this.markerGroups).length == 0) {
+                        return;
+                    }
+
+                    this.layerControl = L.control.layers(null, this.markerGroups).addTo(this.map);
                 },
 
                 createIcon(marker) {
@@ -265,9 +283,8 @@
                     if (marker.icon) {
                         options.iconUrl = marker.icon;
                     } else {
-                        const path = '/vendor/filament-leaflet/images';
-                        options.iconUrl = `${path}/marker-icon-2x-${marker.color}.png`;
-                        options.shadowUrl = `${path}/marker-shadow.png`;
+                        options.iconUrl = `{{ $imgsPath }}/marker-icon-2x-${marker.color}.png`;
+                        options.shadowUrl = `{{ $imgsPath }}/marker-shadow.png`;
                     }
 
                     return L.icon(options);
@@ -307,7 +324,7 @@
 
                     if (this.config.markers.length) this.addMarkers();
 
-                    if (this.config.geoJsonData.length) {
+                    if (this.config.geoJsonData?.length) {
                         if (this.geoJsonLayer) this.map.removeLayer(this.geoJsonLayer);
                         this.loadGeoJson();
                     }
@@ -320,21 +337,10 @@
                     this.markerLayers = [];
                     Object.values(this.markerGroups).forEach(group => this.map.removeLayer(group));
                     this.markerGroups = {};
-                },
 
-                // Métodos públicos
-                showMarkerGroup(name) {
-                    this.markerGroups[name]?.addTo(this.map);
-                },
-
-                hideMarkerGroup(name) {
-                    if (this.markerGroups[name]) this.map.removeLayer(this.markerGroups[name]);
-                },
-
-                toggleMarkerGroup(name) {
-                    const group = this.markerGroups[name];
-                    if (group) {
-                        this.map.hasLayer(group) ? this.hideMarkerGroup(name) : this.showMarkerGroup(name);
+                    if (this.layerControl) {
+                        this.map.removeControl(this.layerControl);
+                        this.layerControl = null;
                     }
                 },
 
