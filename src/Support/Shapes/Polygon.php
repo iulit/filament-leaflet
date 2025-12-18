@@ -33,11 +33,10 @@ class Polygon extends Shape
         return 'polygon';
     }
 
-    protected function getLayerData(): array
+    protected function getShapeData(): array
     {
         return [
             'points' => $this->points,
-            'options' => $this->getShapeOptions(),
         ];
     }
 

@@ -30,22 +30,29 @@ This will publish the Leaflet assets used by the package — the distribution no
 
 ## Table of Contents
 
-- [Quick Start](#quick-start)
-- [Map Widget Configuration](#map-widget-configuration)
-- [Working with Markers](#working-with-markers)
-- [Layer Groups](#layer-groups)
-  - [LayerGroup](#layer-group)
-  - [FeatureGroup](#feature-group)
-  - [MarkerCluster](#marker-cluster)
-  - [Combining Multiple Groups](#combining-multiple-layer-groups)
-- [Shapes](#shapes)
-- [Popups and Tooltips](#popups-and-tooltips)
-- [Click Actions](#click-actions)
-- [Model Integration](#model-integration)
-- [GeoJSON Density Maps](#geojson-density-maps)
-- [Advanced Configuration](#advanced-configuration)
+- [Getting Started](#getting-started)
+  - [Quick Start](#quick-start)
+  - [Map Widget Configuration](#map-widget-configuration)
+- [Map Elements](#map-elements)
+  - [Working with Markers](#working-with-markers)
+  - [Layer Groups](#layer-groups)
+  - [Shapes](#shapes)
+  - [Editable Layers](#editable-layers)
+- [User Interaction](#user-interaction)
+  - [Popups and Tooltips](#popups-and-tooltips)
+  - [Click Actions](#click-actions)
+- [Advanced Features](#advanced-features)
+  - [Model Integration](#model-integration)
+  - [GeoJSON Density Maps](#geojson-density-maps)
+  - [Advanced Configuration](#advanced-configuration)
+  - [Multi-Language Support](#multi-language-support)
+- [API Reference](#api-reference)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
 
-## Quick Start
+## Getting Started
+
+### Quick Start
 
 Create your first map widget:
 
@@ -73,9 +80,9 @@ class MyMapWidget extends MapWidget
 }
 ```
 
-## Map Widget Configuration
+### Map Widget Configuration
 
-### Basic Settings
+#### Basic Settings
 
 Configure your map's initial state and behavior:
 
@@ -155,24 +162,24 @@ use EduardoRibeiroDev\FilamentLeaflet\Enums\TileLayer;
 class MyMapWidget extends MapWidget
 {
     // Single layer
-    protected static array $tileLayersUrl = [TileLayer::OpenStreetMap];
+    protected static TileLayer|string|array $tileLayersUrl = TileLayer::OpenStreetMap;
     
     // Multiple layers
-    protected static array $tileLayersUrl = [
+    protected static TileLayer|string|array $tileLayersUrl = [
         TileLayer::OpenStreetMap,
         TileLayer::GoogleSatellite,
         TileLayer::EsriNatGeo,
     ];
     
     // Multiple layers with custom names
-    protected static array $tileLayersUrl = [
+    protected static TileLayer|string|array $tileLayersUrl = [
         'Street Map' => TileLayer::OpenStreetMap,
         'Satellite' => TileLayer::EsriWorldStreetMap,
         'Terrain' => TileLayer::GoogleTerrain,
     ];
     
     // Custom tile server
-    protected static array $tileLayersUrl = [
+    protected static TileLayer|string|array $tileLayersUrl = [
         'Custom' => 'https://{s}.tile.custom.com/{z}/{x}/{y}.png',
     ];
 }
@@ -190,9 +197,11 @@ Available tile layers:
 - `TileLayer::CartoPositron`
 - `TileLayer::CartoDarkMatter`
 
-## Working with Markers
+## Map Elements
 
-### Basic Markers
+### Working with Markers
+
+#### Basic Markers
 
 Create markers with various configurations:
 
@@ -233,7 +242,7 @@ protected function getMarkers(): array
 }
 ```
 
-### Marker Colors
+#### Marker Colors
 
 Use the built-in color system:
 
@@ -255,7 +264,7 @@ Marker::make($lat, $lng)
     ->color(Color::Blue);
 ```
 
-### Markers from Eloquent Models
+#### Markers from Eloquent Models
 
 Automatically create markers from your database records:
 
@@ -278,7 +287,7 @@ protected function getMarkers(): array
 }
 ```
 
-#### JSON Coordinate Storage
+##### JSON Coordinate Storage
 
 If your coordinates are stored as JSON:
 
@@ -294,7 +303,7 @@ Marker::fromRecord(
 );
 ```
 
-#### Customizing Markers from Records
+##### Customizing Markers from Records
 
 Use the `mapRecordCallback` to customize each marker:
 
@@ -322,7 +331,7 @@ Marker::fromRecord(
 );
 ```
 
-## Layer Groups
+### Layer Groups
 
 Layer groups are a powerful way to organize and manage multiple layers on your map. They allow you to:
 
@@ -331,7 +340,7 @@ Layer groups are a powerful way to organize and manage multiple layers on your m
 - **Improve performance** - Manage large datasets efficiently
 - **Control layer management** - Add/remove layers from groups dynamically
 
-### Layer Group
+#### Layer Group
 
 A simple container for organizing related layers. Perfect for grouping logically related markers and shapes without any automatic behavior:
 
@@ -397,7 +406,7 @@ LayerGroup::make([
 ->id('store-coverage-group');
 ```
 
-### Feature Group
+#### Feature Group
 
 Creates a polygon envelope around all layers in the group. This is useful for visualizing the coverage area or boundary of a set of points:
 
@@ -453,7 +462,7 @@ FeatureGroup::make($warehouseMarkers)
     });
 ```
 
-### Marker Cluster
+#### Marker Cluster
 
 Groups nearby markers into clusters for better performance and visual clarity, especially with large datasets. Clusters automatically expand when zooming in:
 
@@ -557,7 +566,7 @@ MarkerCluster::make($markers)
     ]);
 ```
 
-### Combining Multiple Layer Groups
+#### Combining Multiple Layer Groups
 
 You can combine different layer groups in the same map to create complex, multi-layered visualizations:
 
@@ -639,11 +648,11 @@ This example demonstrates:
 
 Layer groups automatically appear in the Leaflet controls when a name is set, allowing users to toggle them on/off from the map interface.
 
-## Shapes
+### Shapes
 
 Draw various geometric shapes on your map:
 
-### Circles
+#### Circles
 
 Circles with radius in various units:
 
@@ -690,7 +699,7 @@ protected function getShapes(): array
 }
 ```
 
-### Circle Markers
+#### Circle Markers
 
 Small circles with pixel-based radius (like markers but circular):
 
@@ -705,7 +714,7 @@ CircleMarker::make(-23.5505, -46.6333)
     ->title('Point of Interest');
 ```
 
-### Polygons
+#### Polygons
 
 Draw custom polygons:
 
@@ -734,7 +743,7 @@ Polygon::make()
     ->blue();
 ```
 
-### Polylines
+#### Polylines
 
 Draw lines connecting multiple points:
 
@@ -764,7 +773,7 @@ Polyline::make()
     ->weight(3);
 ```
 
-### Rectangles
+#### Rectangles
 
 Draw rectangular bounds:
 
@@ -789,10 +798,7 @@ Rectangle::makeFromCoordinates(
 ->red();
 ```
 
-### Shape Styling
-
-All shapes support comprehensive styling options:
-
+#### Shape Styling
 ```php
 Circle::make(-23.5505, -46.6333)
     ->radius(5000)
@@ -814,7 +820,45 @@ Circle::make(-23.5505, -46.6333)
     ]);
 ```
 
-## Popups and Tooltips
+### Editable Layers
+
+Make markers and shapes editable directly on the map by enabling the draw control:
+
+```php
+class MyMapWidget extends MapWidget
+{
+    protected static bool $hasDrawControl = true;
+    
+    protected function getMarkers(): array
+    {
+        return [
+            Marker::make(-23.5505, -46.6333)
+                ->title('Editable Marker')
+                ->editable(),  // Make this marker editable
+            
+            Circle::make(-23.5505, -46.6333)
+                ->radiusInKilometers(5)
+                ->editable(),  // Make this circle editable
+        ];
+    }
+}
+```
+
+You can also make all layers in a group editable:
+
+```php
+LayerGroup::make([
+    Marker::make(-23.5505, -46.6333)->title('Point 1'),
+    Marker::make(-23.5515, -46.6343)->title('Point 2'),
+    Marker::make(-23.5525, -46.6353)->title('Point 3'),
+])
+->name('Editable Points')
+->editable(),  // All markers in the group are now editable
+```
+
+## User Interaction
+
+### Popups and Tooltips
 
 ### Tooltips
 
@@ -840,7 +884,7 @@ Marker::make(-23.5505, -46.6333)
     ->tooltipOptions(['opacity' => 0.9]);
 ```
 
-### Popups
+#### Popups
 
 Popups appear on click and support rich content:
 
@@ -871,7 +915,7 @@ Marker::make(-23.5505, -46.6333)
     );
 ```
 
-### How Popup Fields Work
+#### How Popup Fields Work
 
 The `popupFields()` method automatically formats your data into a clean, structured display:
 
@@ -905,7 +949,7 @@ Both keys and values are translated, so you can use translation keys:
 ])
 ```
 
-### Combining Title, Tooltip, and Popup
+#### Combining Title, Tooltip, and Popup
 
 ```php
 Marker::make(-23.5505, -46.6333)
@@ -918,7 +962,7 @@ Marker::make(-23.5505, -46.6333)
     ]);
 ```
 
-## Click Actions
+### Click Actions
 
 Handle user interactions with layers:
 
@@ -1004,9 +1048,11 @@ public function onMapClick(float $latitude, float $longitude): void
 }
 ```
 
-## Model Integration
+## Advanced Features
 
-### CRUD Operations
+### Model Integration
+
+#### CRUD Operations
 
 Enable creating markers directly from map clicks:
 
@@ -1051,7 +1097,7 @@ Notes:
 
 Now when users click the map, a form modal opens to create a new location!
 
-### Using a Resource Form
+##### Using a Resource Form
 
 Integrate with existing Filament resources:
 
@@ -1067,7 +1113,7 @@ class LocationMapWidget extends MapWidget
 }
 ```
 
-### After Create Hook
+##### After Create Hook
 
 ```php
 protected function afterMarkerCreated(Model $record): void
@@ -1082,7 +1128,7 @@ protected function afterMarkerCreated(Model $record): void
 }
 ```
 
-### Mutate Form Data
+##### Mutate Form Data
 
 Transform data before saving:
 
@@ -1097,7 +1143,7 @@ protected function mutateFormDataBeforeCreate(array $data): array
 }
 ```
 
-### Table Integration
+##### Table Integration
 
 Refresh the map when table actions are performed:
 
@@ -1116,7 +1162,7 @@ This automatically:
 - Refreshes the map after create/edit/delete actions
 - Keeps the map in sync with your table
 
-## GeoJSON Density Maps
+### GeoJSON Density Maps
 
 Display choropleth maps with custom density data:
 
@@ -1158,9 +1204,11 @@ class BrazilDensityWidget extends MapWidget
 
 The colors are automatically applied based on data distribution, creating a beautiful density visualization.
 
-## Advanced Configuration
+### Advanced Configuration
 
-### Custom Styles
+### Advanced Configuration
+
+#### Custom Styles
 
 Add custom CSS to your map:
 
@@ -1179,7 +1227,7 @@ public function getCustomStyles(): string
 }
 ```
 
-### Custom Scripts
+#### Custom Scripts
 
 Execute JavaScript after map initialization:
 
@@ -1205,48 +1253,7 @@ public function getAdditionalScripts(): string
 }
 ```
 
-### Groups and Layers
-
-Organize markers and shapes into groups:
-
-```php
-protected function getMarkers(): array
-{
-    return [
-        Marker::make(-23.5505, -46.6333)
-            ->group('stores')
-            ->title('Store 1'),
-        
-        Marker::make(-23.5515, -46.6343)
-            ->group('stores')
-            ->title('Store 2'),
-        
-        Marker::make(-23.5525, -46.6353)
-            ->group('warehouses')
-            ->title('Warehouse 1'),
-    ];
-}
-```
-
-### Distance Calculation
-
-Calculate distances between markers:
-
-```php
-$marker1 = Marker::make(-23.5505, -46.6333);
-$marker2 = Marker::make(-22.9068, -43.1729);
-
-$distance = $marker1->distanceTo($marker2); // Distance in kilometers
-```
-
-### Coordinate Validation
-
-```php
-$marker = Marker::make($lat, $lng)
-    ->validate(); // Throws exception if coordinates are invalid
-```
-
-### Map Options
+#### Map Options
 
 Fine-tune Leaflet behavior:
 
@@ -1270,7 +1277,39 @@ Notes:
 
 - Please, keep the `zoomControl` and `attributionControl` set as `false`. It is managed in the [Map Controls](#map-controls) section.
 
-### Complete Example
+### Multi-Language Support
+
+The package includes built-in support for multiple languages including:
+
+- English (en)
+- Portuguese (pt_BR, pt_PT)
+- Spanish (es)
+- French (fr)
+- German (de)
+- Italian (it)
+
+All draw control labels, tooltips, and messages are automatically translated based on your application's locale. The package uses Laravel's translation system, so you can customize translations in your `resources/lang` directory:
+
+```
+resources/lang/
+├── en/
+│   └── filament-leaflet.php
+├── pt_BR/
+│   └── filament-leaflet.php
+├── de/
+│   └── filament-leaflet.php
+└── ...
+```
+
+To customize translations, publish the language files:
+
+```bash
+php artisan vendor:publish --tag=filament-leaflet-translations
+```
+
+Then edit the translation files in `public/vendor/filament-leaflet/lang`.
+
+#### Complete Example
 
 Here's a comprehensive example combining multiple features:
 
@@ -1454,6 +1493,7 @@ class StoreMapWidget extends MapWidget
 | `color($color)` | Set marker color |
 | `icon($url, $size)` | Set custom icon |
 | `draggable($bool)` | Make marker draggable |
+| `editable($bool)` | Make marker editable on the map |
 | `group($group)` | Assign to group (string or BaseLayerGroup) |
 | `popup($content, $fields, $options)` | Configure popup |
 | `tooltip($content, $permanent, $direction, $options)` | Configure tooltip |
@@ -1471,6 +1511,7 @@ class StoreMapWidget extends MapWidget
 | `opacity($value)` | Set border opacity (0-1) |
 | `fillOpacity($value)` | Set fill opacity (0-1) |
 | `dashArray($pattern)` | Set dash pattern |
+| `editable($bool)` | Make shape editable on the map |
 | `options($array)` | Set custom options |
 | `popup($content, $fields, $options)` | Configure popup |
 | `tooltip($content, $permanent, $direction, $options)` | Configure tooltip |
@@ -1534,6 +1575,7 @@ class StoreMapWidget extends MapWidget
 | `make($layers)` | Create simple layer group |
 | `name($name)` | Set user-visible group name |
 | `id($id)` | Set group ID for controls |
+| `editable($bool)` | Make all layers in group editable |
 
 ### FeatureGroup Methods
 
@@ -1545,6 +1587,7 @@ class StoreMapWidget extends MapWidget
 | `fillBlue()`, `fillRed()`, etc. | Set fill color |
 | `fillOpacity($value)` | Set fill transparency (0-1) |
 | `weight($pixels)` | Set border width |
+| `editable($bool)` | Make all layers in group editable |
 
 ### MarkerCluster Methods
 
@@ -1555,6 +1598,7 @@ class StoreMapWidget extends MapWidget
 | `marker($marker)` | Add single marker |
 | `markers($array)` | Add multiple markers |
 | `name($name)` | Set cluster group name |
+| `editable($bool)` | Make all markers in cluster editable |
 | `maxClusterRadius($pixels)` | Set cluster radius (pixels) |
 | `showCoverageOnHover($bool)` | Show cluster coverage on hover |
 | `zoomToBoundsOnClick($bool)` | Zoom to bounds when clicked |
@@ -1578,7 +1622,7 @@ Available colors for markers and shapes:
 - `Color::Black` / `->black()` - #000
 - `Color::Gold` / `->gold()` - #ffd700
 
-## Tips & Best Practices
+## Best Practices
 
 ### Performance Optimization
 
@@ -1708,6 +1752,31 @@ public function onMapClick(float $latitude, float $longitude): void
     parent::onMapClick($latitude, $longitude);
 }
 ```
+
+### Enabling Draw Control
+
+The draw control is disabled by default for better performance. To enable it:
+
+```php
+class MyMapWidget extends MapWidget
+{
+    protected static bool $hasDrawControl = true;
+    
+    protected function getMarkers(): array
+    {
+        return [
+            // Your markers...
+        ];
+    }
+}
+```
+
+Once enabled, users can:
+- Draw new markers, shapes (circles, polygons, polylines, rectangles)
+- Edit existing editable layers
+- Delete layers by clicking the delete tool
+
+Note: Only layers marked with `->editable()` can be edited on the map.
 
 ## Troubleshooting
 

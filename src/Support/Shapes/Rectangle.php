@@ -33,11 +33,10 @@ class Rectangle extends Shape
         return 'rectangle';
     }
 
-    protected function getLayerData(): array
+    protected function getShapeData(): array
     {
         return [
             'bounds' => $this->bounds,
-            'options' => $this->getShapeOptions(),
         ];
     }
 

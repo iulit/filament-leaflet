@@ -14,6 +14,11 @@ abstract class Shape extends BaseLayer
     use HasOptions;
 
     /**
+     * Retorna os dados específicos da forma.
+     */
+    abstract protected function getShapeData(): array;
+
+    /**
      * Define a espessura da borda em pixels.
      */
     public function weight(int $weight): static
@@ -57,6 +62,14 @@ abstract class Shape extends BaseLayer
                 'color' => $this->getHexColor(),
                 'fillColor' => $this->getHexFillColor(),
             ])
+        );
+    }
+
+    protected function getLayerData(): array
+    {
+        return array_merge(
+            $this->getShapeData(),
+            ['options' => $this->getShapeOptions()]
         );
     }
 }

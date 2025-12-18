@@ -46,7 +46,7 @@ abstract class MapWidget extends Widget implements HasSchemas, HasActions
     protected static bool $hasSearchControl = false;
     protected static bool $hasScaleControl = false;
     protected static bool $hasZoomControl = false;
-    protected static bool $hasDrawControl = true;
+    protected static bool $hasDrawControl = false;
 
     protected static int $maxZoom = 18;
     protected static int $minZoom = 2;

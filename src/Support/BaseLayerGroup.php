@@ -17,6 +17,7 @@ abstract class BaseLayerGroup implements Arrayable, Jsonable
     protected ?string $id = null;
     protected ?array $layers = null;
     protected ?string $name = null;
+    protected ?bool $isEditable = null;
 
     public function __construct(?array $layers = null, ?string $id = null, ?string $name = null)
     {
@@ -48,6 +49,15 @@ abstract class BaseLayerGroup implements Arrayable, Jsonable
     public function name(?string $name)
     {
         $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * Define se os layers do grupo são editáveis.
+     */
+    public function editable(?bool $editable = true): static
+    {
+        $this->isEditable = $editable;
         return $this;
     }
 
@@ -100,7 +110,12 @@ abstract class BaseLayerGroup implements Arrayable, Jsonable
      */
     protected function modifyLayerUsing(BaseLayer $layer): BaseLayer
     {
-        return $layer->group($this);
+        return $layer
+            ->group($this)
+            ->when(
+                $this->isEditable !== null,
+                fn($layer) => $layer->editable($this->isEditable)
+            );
     }
 
     /*

@@ -15,6 +15,7 @@ abstract class BaseLayer implements Arrayable, Jsonable
 
     protected ?string $id = null;
     protected null|string|BaseLayerGroup $group = null;
+    protected bool $isEditable = false;
 
     // Configurações de Tooltip
     protected array $tooltipData = [];
@@ -315,6 +316,15 @@ abstract class BaseLayer implements Arrayable, Jsonable
         return $this->group;
     }
 
+    /**
+     * Define se o layer é editável.
+     */
+    public function editable(bool $editable = true): static
+    {
+        $this->isEditable = $editable;
+        return $this;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Serialization
@@ -333,6 +343,7 @@ abstract class BaseLayer implements Arrayable, Jsonable
             'clickAction' => isset($this->clickAction),
             'onMouseOver' => $this->onMouseOverScript,
             'onMouseOut' => $this->onMouseOutScript,
+            'editable' => $this->isEditable,
         ];
 
         if (array_filter($this->tooltipData)) {

@@ -37,11 +37,10 @@ class Polyline extends Shape
         return 'polyline';
     }
 
-    protected function getLayerData(): array
+    protected function getShapeData(): array
     {
         return [
             'points' => $this->points,
-            'options' => $this->getShapeOptions(),
         ];
     }
 

@@ -7,6 +7,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
+use Illuminate\Support\Facades\Lang;
 
 class FilamentLeafletServiceProvider extends PackageServiceProvider
 {
@@ -25,12 +26,16 @@ class FilamentLeafletServiceProvider extends PackageServiceProvider
             $this->getAssetPackageName()
         );
 
-        if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__ . '/../resources/dist/leaflet/images' => public_path('vendor/filament-leaflet/images'),
-                __DIR__ . '/../resources/js/maps' => public_path('vendor/filament-leaflet/maps')
-            ], 'filament-leaflet');
-        }
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'filament-leaflet');
+
+        $this->publishes([
+            __DIR__ . '/../resources/lang' => $this->app->langPath('/vendor/filament-leaflet'),
+        ], 'filament-leaflet-translations');
+
+        $this->publishes([
+            __DIR__ . '/../resources/dist/leaflet/images' => public_path('vendor/filament-leaflet/images'),
+            __DIR__ . '/../resources/js/maps' => public_path('vendor/filament-leaflet/maps')
+        ], 'filament-leaflet');
     }
 
     protected function getAssetPackageName(): ?string

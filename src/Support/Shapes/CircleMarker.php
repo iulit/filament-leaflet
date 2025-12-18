@@ -31,12 +31,11 @@ class CircleMarker extends Shape
         return 'circleMarker';
     }
 
-    protected function getLayerData(): array
+    protected function getShapeData(): array
     {
         return [
             'center' => $this->center,
             'radius' => $this->radius,
-            'options' => $this->getShapeOptions(),
         ];
     }
 

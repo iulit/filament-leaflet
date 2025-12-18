@@ -94,8 +94,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const MapWidget{{ $widgetId }} = {
                 config: @json($config),
-                widgetId: '{{ $widgetId }}',
-                mapId: '{{ $mapId }}',
+                widgetId: "{{ $widgetId }}",
+                mapId: "{{ $mapId }}",
                 map: null,
                 layers: [],
                 layerGroups: {},
@@ -262,6 +262,9 @@
 
                         if (!layer) return;
 
+                        // Define o ID do layer
+                        layer.options.layerId = layerData.id || null;
+
                         // Adiciona popup se existir
                         if (layerData.popup) {
                             this.bindPopup(layer, layerData.popup);
@@ -289,6 +292,11 @@
                             layer.on('mouseout', function() {
                                 eval(layerData.onMouseOut);
                             });
+                        }
+
+                        // Adiciona aos layers editáveis se for o caso
+                        if (layerData.editable) {
+                            this.editableLayers.addLayer(layer);
                         }
 
                         // Adiciona ao grupo ou direto no mapa
@@ -522,8 +530,8 @@
 
                     const search = new GeoSearch.GeoSearchControl({
                         provider: provider,
-                        notFoundMessage: '{{ __('Sorry, that address could not be found.') }}',
-                        searchLabel: '{{ __('Enter address') }}',
+                        notFoundMessage: "{{ __('filament-leaflet::filament-leaflet.address_not_found') }}",
+                        searchLabel: "{{ __('filament-leaflet::filament-leaflet.enter_address') }}",
 
                         marker: {
                             icon: this.createIcon({
@@ -538,8 +546,8 @@
 
                 setupFullscreenControl() {
                     const fullscreen = new L.Control.FullScreen({
-                        title: '{{ __('Full Screen') }}',
-                        titleCancel: '{{ __('Exit Full Screen') }}',
+                        title: "{{ __('filament-leaflet::filament-leaflet.full_screen') }}",
+                        titleCancel: "{{ __('filament-leaflet::filament-leaflet.exit_full_screen') }}",
                         forceSeparateButton: true,
                     });
 
@@ -551,31 +559,82 @@
                     this.map.addLayer(this.editableLayers);
 
                     const draw = new L.Control.Draw({
-                        edit: {
-                            featureGroup: this.editableLayers,
-                        },
                         draw: {
                             marker: {
                                 icon: this.createIcon({
                                     color: 'blue'
                                 })
                             }
+                        },
+                        edit: {
+                            featureGroup: this.editableLayers,
+                            poly: {
+                                allowIntersection: false
+                            },
                         }
                     });
+
+                    // Traduções
+                    L.drawLocal.draw.toolbar.buttons.marker ="{{ __('filament-leaflet::filament-leaflet.draw_marker') }}";
+                    L.drawLocal.draw.toolbar.buttons.polygon ="{{ __('filament-leaflet::filament-leaflet.draw_polygon') }}";
+                    L.drawLocal.draw.toolbar.buttons.polyline ="{{ __('filament-leaflet::filament-leaflet.draw_polyline') }}";
+                    L.drawLocal.draw.toolbar.buttons.rectangle ="{{ __('filament-leaflet::filament-leaflet.draw_rectangle') }}";
+                    L.drawLocal.draw.toolbar.buttons.circle ="{{ __('filament-leaflet::filament-leaflet.draw_circle') }}";
+                    L.drawLocal.draw.toolbar.buttons.circlemarker ="{{ __('filament-leaflet::filament-leaflet.draw_circlemarker') }}";
+
+                    L.drawLocal.draw.handlers.circle.tooltip.start ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_circle_tooltip_start') }}";
+                    L.drawLocal.draw.handlers.circlemarker.tooltip.start ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_circlemarker_tooltip_start') }}";
+                    L.drawLocal.draw.handlers.marker.tooltip.start ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_marker_tooltip_start') }}";
+                    L.drawLocal.draw.handlers.polygon.tooltip.start ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polygon_tooltip_start') }}";
+                    L.drawLocal.draw.handlers.polygon.tooltip.cont ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polygon_tooltip_cont') }}";
+                    L.drawLocal.draw.handlers.polygon.tooltip.end ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polygon_tooltip_end') }}";
+                    L.drawLocal.draw.handlers.polyline.error ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polyline_error') }}";
+                    L.drawLocal.draw.handlers.polyline.tooltip.start ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polyline_tooltip_start') }}";
+                    L.drawLocal.draw.handlers.polyline.tooltip.cont ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polyline_tooltip_cont') }}";
+                    L.drawLocal.draw.handlers.polyline.tooltip.end ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_polyline_tooltip_end') }}";
+                    L.drawLocal.draw.handlers.rectangle.tooltip.start ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_rectangle_tooltip_start') }}";
+                    L.drawLocal.draw.handlers.simpleshape.tooltip.end ="{{ __('filament-leaflet::filament-leaflet.draw_handlers_simpleshape_tooltip_end') }}";
+
+                    L.drawLocal.draw.toolbar.actions.title.cancel ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_actions_title_cancel') }}";
+                    L.drawLocal.draw.toolbar.actions.text.cancel ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_actions_text_cancel') }}";
+                    L.drawLocal.draw.toolbar.actions.title.finish ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_actions_title_finish') }}";
+                    L.drawLocal.draw.toolbar.actions.text.finish ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_actions_text_finish') }}";
+                    L.drawLocal.draw.toolbar.finish.tooltip ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_finish_tooltip') }}";
+                    L.drawLocal.draw.toolbar.undo.title ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_undo_title') }}";
+                    L.drawLocal.draw.toolbar.undo.text ="{{ __('filament-leaflet::filament-leaflet.draw_toolbar_undo_text') }}";
+
+                    L.drawLocal.edit.toolbar.buttons.edit ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_buttons_edit') }}";
+                    L.drawLocal.edit.toolbar.buttons.editdisabled ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_buttons_editdisabled') }}";
+                    L.drawLocal.edit.toolbar.buttons.remove ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_buttons_remove') }}";
+                    L.drawLocal.edit.toolbar.buttons.removedisabled ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_buttons_removedisabled') }}";
+                    L.drawLocal.edit.toolbar.actions.save.title ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_actions_save_title') }}";
+                    L.drawLocal.edit.toolbar.actions.save.text ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_actions_save_text') }}";
+                    L.drawLocal.edit.toolbar.actions.cancel.title ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_actions_cancel_title') }}";
+                    L.drawLocal.edit.toolbar.actions.cancel.text ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_actions_cancel_text') }}";
+                    L.drawLocal.edit.toolbar.actions.clearAll.title ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_actions_clearAll_title') }}";
+                    L.drawLocal.edit.toolbar.actions.clearAll.text ="{{ __('filament-leaflet::filament-leaflet.edit_toolbar_actions_clearAll_text') }}";
+
+                    L.drawLocal.edit.handlers.edit.tooltip.text ="{{ __('filament-leaflet::filament-leaflet.edit_handlers_edit_tooltip_text') }}";
+                    L.drawLocal.edit.handlers.edit.tooltip.subtext ="{{ __('filament-leaflet::filament-leaflet.edit_handlers_edit_tooltip_subtext') }}";
+                    L.drawLocal.edit.handlers.remove.tooltip.text ="{{ __('filament-leaflet::filament-leaflet.edit_handlers_remove_tooltip_text') }}";
+
+                    L.drawLocal.draw.handlers.marker.tooltip.title ="{{ __('filament-leaflet::filament-leaflet.draw_draw_handler_marker_tooltip_title') }}";
+                    L.drawLocal.draw.handlers.polygon.tooltip.title ="{{ __('filament-leaflet::filament-leaflet.draw_draw_handler_polygon_tooltip_title') }}";
+                    L.drawLocal.draw.handlers.polyline.tooltip.title ="{{ __('filament-leaflet::filament-leaflet.draw_draw_handler_polyline_tooltip_title') }}";
 
                     this.map.addControl(draw);
                 },
 
                 setupEventHandlers() {
-                    // Evento de click no mapa - só processa se NÃO estiver desenhando
+                    // Evento de click no mapa
                     this.map.on('click', (e) => {
-                        if (!this.isDrawing) {
-                            const coords = e.latlng;
-                            @this.onMapClick(
-                                coords['lat'],
-                                coords['lng']
-                            );
-                        }
+                        if (this.isDrawing) return;
+
+                        const coords = e.latlng;
+                        @this.onMapClick(
+                            coords['lat'],
+                            coords['lng']
+                        );
                     });
 
                     // Eventos do Draw Control - controlar estado de desenho
@@ -624,14 +683,11 @@
                 updateMapData(newConfig) {
                     this.config = newConfig;
                     this.clearLayers();
+                    this.addLayerGroups();
+                    this.addLayers();
 
-                    // Recarrega todos os layers
-                    if (this.config.layers?.length) {
-                        this.addLayers();
-                    }
-
-                    if (this.config.geoJsonData?.length) {
-                        if (this.geoJsonLayer) this.map.removeLayer(this.geoJsonLayer);
+                    if (Object.keys(this.config.geoJsonData)?.length) {
+                        this.setupInfoControl();
                         this.loadGeoJson();
                     }
 
@@ -641,19 +697,25 @@
                 clearLayers() {
                     // Limpa todos os layers
                     this.layers.forEach(({
-                        layer
+                        layer,
+                        data
                     }) => {
-                        if (layer.removeFrom) {
-                            layer.removeFrom(this.map);
+                        if (data.group) {
+                            this.layerGroups[data.group].layer.removeLayer(layer);
                         } else {
                             this.map.removeLayer(layer);
                         }
                     });
+
                     this.layers = [];
 
                     // Limpa grupos
-                    Object.values(this.layerGroups).forEach(group => this.map
-                        .removeLayer(group));
+                    Object.values(this.layerGroups).forEach(({
+                        layer
+                    }) => {
+                        this.map.removeLayer(layer);
+                    });
+
                     this.layerGroups = {};
 
                     if (this.layerControl) {
