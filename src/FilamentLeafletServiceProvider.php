@@ -6,8 +6,8 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Asset;
 use Filament\Support\Assets\Js;
-use Illuminate\Support\Facades\Lang;
 
 class FilamentLeafletServiceProvider extends PackageServiceProvider
 {
@@ -20,21 +20,24 @@ class FilamentLeafletServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
-        // Asset Registration
-        FilamentAsset::register(
-            $this->getAssets(),
-            $this->getAssetPackageName()
-        );
-
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'filament-leaflet');
 
         $this->publishes([
             __DIR__ . '/../resources/lang' => $this->app->langPath('/vendor/filament-leaflet'),
         ], 'filament-leaflet-translations');
 
+        FilamentAsset::registerScriptData([
+            'translations' => trans('filament-leaflet::filament-leaflet')
+        ]);
+
+        FilamentAsset::register(
+            $this->getAssets(),
+            $this->getAssetPackageName()
+        );
+
         $this->publishes([
-            __DIR__ . '/../resources/dist/leaflet/images' => public_path('vendor/filament-leaflet/images'),
-            __DIR__ . '/../resources/js/maps' => public_path('vendor/filament-leaflet/maps')
+            __DIR__ . '/../resources/dist/images' => public_path('vendor/filament-leaflet/images'),
+            __DIR__ . '/../resources/json/maps' => public_path('vendor/filament-leaflet/maps')
         ], 'filament-leaflet');
     }
 
@@ -49,17 +52,8 @@ class FilamentLeafletServiceProvider extends PackageServiceProvider
     protected function getAssets(): array
     {
         return [
-            Css::make('leaflet', __DIR__ . '/../resources/dist/leaflet/leaflet.css'),
-            Css::make('markercluster', __DIR__ . '/../resources/dist/leaflet/markercluster.css'),
-            Css::make('fullscreen', __DIR__ . '/../resources/dist/leaflet/fullscreen.css'),
-            Css::make('geosearch', __DIR__ . '/../resources/dist/leaflet/geosearch.css'),
-            Css::make('draw', __DIR__ . '/../resources/dist/leaflet/draw.css'),
-
-            Js::make('leaflet', __DIR__ . '/../resources/dist/leaflet/leaflet.js'),
-            Js::make('markercluster', __DIR__ . '/../resources/dist/leaflet/markercluster.js'),
-            Js::make('fullscreen', __DIR__ . '/../resources/dist/leaflet/fullscreen.js'),
-            Js::make('geosearch', __DIR__ . '/../resources/dist/leaflet/geosearch.js'),
-            Js::make('draw', __DIR__ . '/../resources/dist/leaflet/draw.js'),
+            Css::make('leaflet', __DIR__ . '/../resources/dist/leaflet-map.css'),
+            Js::make('leaflet-map', __DIR__ . '/../resources/dist/leaflet-map.js'),
         ];
     }
 }
