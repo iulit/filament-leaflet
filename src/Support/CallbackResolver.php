@@ -33,19 +33,27 @@ class CallbackResolver
      */
     public function parameters(array $parameters)
     {
-        $this->parameters = array_merge($this->parameters, $parameters);
+        foreach ($parameters as $key => $value) {
+            $this->parameter($key, $value);
+        };
+        
         return $this;
     }
 
     /**
      * Define um parâmetro adicional para a resolução do callback
-     * @param string $name
+     * @param string|array $name
      * @param mixed $value
      * @return $this
      */
-    public function parameter(string $name, mixed $value)
+    public function parameter(string|array $name, mixed $value)
     {
-        $this->parameters[$name] = $value;
+        $names = is_array($name) ? $name : [$name];
+
+        foreach ($names as $key) {
+            $this->parameters[$key] = $value;
+        };
+
         return $this;
     }
 

@@ -14,6 +14,18 @@ A powerful and elegant Leaflet integration for Filament PHP that makes creating 
 - 💾 **CRUD Operations** - Create markers directly from map clicks
 - 🎭 **Customizable** - Extensive configuration options for every element
 
+## What's New
+
+- 🧩 **Form Field: MapPicker** — a brand new Filament form field that lets you pick coordinates directly inside a form. It supports methods like `center()`, `height()`, `zoom()`, `tileLayersUrl()`, `geoJsonData()`, `markers()` and automatically syncs latitude/longitude values with the form state.
+- 🔗 **Filament Schemas Integration** — when the map is used inside a schema/component (e.g., fields, components) the frontend will call the exposed Livewire methods `handleMapClick` and `handleLayerClick` on the component (via `ExposedLivewireMethod`). This makes handling map and layer clicks easy from the parent component.
+- 🗂️ **Layer Group Improvements** — `FeatureGroup` now automatically generates a `Polygon` that envelopes the group's points (useful for visualizing areas). New style helpers: `weight()`, `opacity()`, `fillOpacity()`, `dashArray()`.
+- ✏️ **Editable Layers & Draw Control** — improvements to the draw control and consistent support for editable layers (editable groups are now managed correctly on the frontend).
+- 🎨 **Better Color & Options Control** — the `HasColor`, `HasFillColor` and `HasOptions` concerns unify the API for colors, fills and visual options (`->blue()`, `->fillBlue()`, `->option()`, etc.).
+- 🧭 **UX: Pick Marker** — when clicking the map inside a form, a temporary marker is shown to give visual feedback for the selected point.
+- 🎨 **Centralized Styles** — map styles were moved to `resources/css/index.css` and are automatically loaded by the JS component.
+
+See the sections below for usage examples.
+
 ## Installation
 
 ```bash
@@ -32,6 +44,7 @@ This will publish the Leaflet assets used by the package — the distribution no
 
 - [Getting Started](#getting-started)
   - [Quick Start](#quick-start)
+  - [Form Field: MapPicker](#form-field-mappicker)
   - [Map Widget Configuration](#map-widget-configuration)
 - [Map Elements](#map-elements)
   - [Working with Markers](#working-with-markers)
@@ -79,6 +92,29 @@ class MyMapWidget extends MapWidget
     }
 }
 ```
+
+#### Form Field: MapPicker
+
+Use the `MapPicker` field to add an interactive map inside Filament forms. It syncs map clicks to the form state (latitude/longitude fields) and supports configuration options similar to `MapWidget`.
+
+```php
+use EduardoRibeiroDev\FilamentLeaflet\Fields\MapPicker;
+use EduardoRibeiroDev\FilamentLeaflet\Support\Markers\Marker;
+use EduardoRibeiroDev\FilamentLeaflet\Enums\TileLayer;
+
+MapPicker::make('location')
+    ->height(300)
+    ->center(-23.5505, -46.6333)
+    ->zoom(11)
+    ->tileLayersUrl(TileLayer::OpenStreetMap)
+    ->markers([
+        Marker::make(-23.5505, -46.6333)->title('Store 1'),
+    ])
+    ->geoJsonData(['SP' => 166.23])
+    ->geoJsonTooltip('<h4>{state}</h4><b>Density: {density}</b>')
+```
+
+By default, `MapPicker` updates the form's `latitude` and `longitude` fields. Customize the field names with `latitudeFieldName()` and `longitudeFieldName()`.
 
 ### Map Widget Configuration
 
@@ -1035,16 +1071,15 @@ protected function getMarkers(): array
 Handle clicks on the map itself:
 
 ```php
-public function onMapClick(float $latitude, float $longitude): void
+public function handleMapClick(float $latitude, float $longitude): void
 {
     Notification::make()
         ->title('Map clicked')
         ->body("Coordinates: {$latitude}, {$longitude}")
         ->send();
-    
-    // Or create a new marker dynamically
-    // This will trigger the create modal if $markerModel is set
-    parent::onMapClick($latitude, $longitude);
+
+    // Or create a new marker dynamically via the widget create flow
+    parent::handleMapClick($latitude, $longitude);
 }
 ```
 
@@ -1148,7 +1183,7 @@ protected function mutateFormDataBeforeCreate(array $data): array
 Refresh the map when table actions are performed:
 
 ```php
-use EduardoRibeiroDev\FilamentLeaflet\Traits\InteractsWithMap;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\InteractsWithMap;
 
 class ManageLocations extends ManageRecords
 {
@@ -1232,16 +1267,6 @@ public function getCustomStyles(): string
 Execute JavaScript after map initialization:
 
 ```php
-public function afterMapInit(): string
-{
-    return <<<JS
-        console.log('Map initialized!');
-        
-        // Add custom controls
-        L.control.scale().addTo(map);
-    JS;
-}
-
 public function getAdditionalScripts(): string
 {
     return <<<JS

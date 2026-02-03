@@ -1,6 +1,6 @@
 <?php
 
-namespace EduardoRibeiroDev\FilamentLeaflet\Traits;
+namespace EduardoRibeiroDev\FilamentLeaflet\Concerns;
 
 trait HasOptions
 {

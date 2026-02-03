@@ -1,15 +1,21 @@
-@props(['mapId', 'config'])
+@props([
+    'config',
+    'key' => null
+])
+
 @php
     use Filament\Support\Facades\FilamentAsset;
-    use \Illuminate\Support\Js;
+    use Illuminate\Support\Js;
 @endphp
 
 <div
     wire:ignore
-    x-data="leafletMap($wire, {
-        config: {{ Js::from($config) }},
-        mapId: '{{ $mapId }}',
-    })"
+    style="height: {{ $config['mapHeight'] }}px"
+    x-data="leafletMap(
+        $wire,
+        {{ Js::from($config) }},
+        {{ Js::from($key) }}
+    )"
 >
-    <div x-ref="map" id="{{ $mapId }}"></div>
+    <div id="{{ $config['mapId'] }}"></div>
 </div>

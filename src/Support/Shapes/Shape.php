@@ -3,9 +3,9 @@
 namespace EduardoRibeiroDev\FilamentLeaflet\Support\Shapes;
 
 use EduardoRibeiroDev\FilamentLeaflet\Support\BaseLayer;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasColor;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasFillColor;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasOptions;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasColor;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasFillColor;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasOptions;
 
 abstract class Shape extends BaseLayer
 {

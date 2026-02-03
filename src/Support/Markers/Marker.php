@@ -6,7 +6,7 @@ use Closure;
 use EduardoRibeiroDev\FilamentLeaflet\Enums\Color;
 use EduardoRibeiroDev\FilamentLeaflet\Support\BaseLayer;
 use EduardoRibeiroDev\FilamentLeaflet\Support\CallbackResolver;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasColor;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasColor;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 

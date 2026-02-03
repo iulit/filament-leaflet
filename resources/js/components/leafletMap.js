@@ -4,18 +4,17 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet.fullscreen/dist/Control.FullScreen.css';
 import 'leaflet-geosearch/dist/geosearch.css';
+import '../../css/index.css';
 
 import 'leaflet-draw';
 import { FullScreen } from 'leaflet.fullscreen';
 import { EsriProvider, GeoSearchControl } from 'leaflet-geosearch';
 
 document.addEventListener('livewire:init', () => {
-    const leafletMap = ($wire, { config, mapId, afterMapInit }) => {
-        let map;
-
+    const leafletMap = ($wire, config, componentKey) => {
         return {
+            map: null,
             config,
-            mapId,
             imgsPath: '/vendor/filament-leaflet/images',
             layers: [],
             layerGroups: {},
@@ -25,10 +24,12 @@ document.addEventListener('livewire:init', () => {
             layerControl: null,
             editableLayers: null,
             isDrawing: false,
+            pickMarker: null,
 
             init() {
                 this.createMap();
                 this.addTileLayers();
+                this.addLayerGroups();
                 this.setupMapControls();
 
                 if (Object.keys(this.config.geoJsonData)?.length) {
@@ -36,13 +37,10 @@ document.addEventListener('livewire:init', () => {
                     this.loadGeoJson();
                 }
 
-                this.addLayerGroups();
                 this.addLayers();
                 this.setupEventHandlers();
                 this.setupLivewireListeners();
                 this.setupLayerControl();
-
-                map.invalidateSize();
             },
 
             getTranslation(key, defaultText = '') {
@@ -52,8 +50,14 @@ document.addEventListener('livewire:init', () => {
             },
 
             createMap() {
-                map = L.map(this.$refs.map, this.config.mapConfig || {})
+                this.map = L.map(this.config.mapId, this.config.mapConfig || {})
                     .setView(this.config.defaultCoord, this.config.defaultZoom);
+
+                const resizeObserver = new ResizeObserver(() => {
+                    Alpine.raw(this.map).invalidateSize();
+                });
+
+                resizeObserver.observe(Alpine.raw(this.map)._container);
             },
 
             addTileLayers() {
@@ -67,7 +71,7 @@ document.addEventListener('livewire:init', () => {
                     this.baseLayers[label] = layer;
 
                     if (index === 0) {
-                        layer.addTo(map);
+                        layer.addTo(Alpine.raw(this.map));
                     }
                 });
             },
@@ -75,7 +79,7 @@ document.addEventListener('livewire:init', () => {
             setupInfoControl() {
                 this.info = L.control();
                 this.info.onAdd = () => {
-                    const div = L.DomUtil.create('div', `info-${this.mapId}`);
+                    const div = L.DomUtil.create('div', 'info');
                     this.info._div = div;
                     div.style.display = 'none';
                     return div;
@@ -95,7 +99,7 @@ document.addEventListener('livewire:init', () => {
                     }
                 };
 
-                this.info.addTo(map);
+                this.info.addTo(Alpine.raw(this.map));
             },
 
             async loadGeoJson() {
@@ -130,11 +134,11 @@ document.addEventListener('livewire:init', () => {
                                 mouseover: (e) => this.info?.update(e.target.feature
                                     .properties),
                                 mouseout: () => this.info?.update(),
-                                click: (e) => map.fitBounds(e.target
+                                click: (e) => Alpine.raw(this.map).fitBounds(e.target
                                     .getBounds())
                             });
                         }
-                    }).addTo(map);
+                    }).addTo(Alpine.raw(this.map));
                 } catch (error) {
                     console.error('Erro GeoJSON:', error);
                 }
@@ -156,9 +160,10 @@ document.addEventListener('livewire:init', () => {
             },
 
             addLayers() {
-                if (!this.config.layers?.length) return;
+                const layers = Alpine.raw(this.config.layers);
+                if (!layers?.length) return;
 
-                this.config.layers.forEach(layerData => {
+                layers.forEach(layerData => {
                     let layer = null;
 
                     switch (layerData.type) {
@@ -187,59 +192,64 @@ document.addEventListener('livewire:init', () => {
 
                     if (!layer) return;
 
-                    // Define o ID do layer
                     layer.options.layerId = layerData.id || null;
+                    layer.options.group = layerData.group || null;
 
-                    // Adiciona popup se existir
                     if (layerData.popup) {
                         this.bindPopup(layer, layerData.popup);
                     }
 
-                    // Adiciona tooltip se existir
                     if (layerData.tooltip) {
                         this.bindTooltip(layer, layerData.tooltip);
                     }
 
-                    // Adiciona evento de click
                     if (layerData.clickAction) {
-                        layer.on('click', () => $wire.onLayerClick(layerData.id));
+                        layer.on('click', () => {
+                            if (componentKey) {
+                                $wire.callSchemaComponentMethod(
+                                    componentKey,
+                                    'handleLayerClick',
+                                    { layerId: layer.id }
+                                )
+                            } else {
+                                $wire.call(
+                                    'handleLayerClick',
+                                    [layer.id]
+                                )
+                            }
+                        });
                     }
 
-                    // Adiciona evento de mouse over
                     if (layerData.onMouseOver) {
                         layer.on('mouseover', function () {
                             eval(layerData.onMouseOver);
                         });
                     }
 
-                    // Adiciona evento de mouse out
                     if (layerData.onMouseOut) {
                         layer.on('mouseout', function () {
                             eval(layerData.onMouseOut);
                         });
                     }
 
-                    // Adiciona aos layers editáveis se for o caso
-                    if (layerData.editable && this.editableLayers) {
-                        this.editableLayers.addLayer(layer);
+                    if (layerData.editable) {
+                        Alpine.raw(this.editableLayers).addLayer(layer);
                     }
 
-                    // Adiciona ao grupo ou direto no mapa
                     if (layerData.group) {
                         this.layerGroups[layerData.group]['layer'].addLayer(layer);
                     } else {
-                        layer.addTo(map);
+                        layer.addTo(Alpine.raw(this.map));
                     }
 
-                    // Salva referência
-                    this.layers.push({
-                        layer,
-                        data: layerData
-                    });
+                    this.layers.push(layer);
                 });
             },
 
             addLayerGroups() {
+                this.editableLayers = new L.FeatureGroup();
+                this.editableLayers.addTo(Alpine.raw(this.map));
+
                 if (!Object.keys(this.config.layerGroups)?.length > 0) return;
 
                 this.config.layerGroups.forEach(layerGroupData => {
@@ -260,7 +270,7 @@ document.addEventListener('livewire:init', () => {
                     if (!layerGroup) return;
 
                     // Adiciona o grupo ao mapa
-                    layerGroup.addTo(map);
+                    layerGroup.addTo(Alpine.raw(this.map));
 
                     // Salva referência
                     this.layerGroups[layerGroupData.id] = {
@@ -275,8 +285,6 @@ document.addEventListener('livewire:init', () => {
 
                 const marker = L.marker([data.lat, data.lng], {
                     icon: this.createIcon(data),
-                    title: data.title || data.popup?.title || data.tooltip
-                        ?.content || '',
                     draggable: data.draggable || false
                 });
 
@@ -284,13 +292,13 @@ document.addEventListener('livewire:init', () => {
             },
 
             createCircle(data) {
-                if (!data.center || !data.radius) return null;
-                return L.circle(data.center, data.radius, data.options || {});
+                if (!data.center) return null;
+                return L.circle(data.center, data.options || {});
             },
 
             createCircleMarker(data) {
-                if (!data.center || !data.radius) return null;
-                return L.circleMarker(data.center, data.radius, data.options || {});
+                if (!data.center) return null;
+                return L.circleMarker(data.center, data.options || {});
             },
 
             createRectangle(data) {
@@ -319,8 +327,8 @@ document.addEventListener('livewire:init', () => {
                 if (marker.icon) {
                     options.iconUrl = marker.icon;
                 } else {
-                    options.iconUrl =
-                        `${this.imgsPath}/marker-icon-2x-${marker.color}.png`;
+                    const color = marker.color || 'blue';
+                    options.iconUrl = `${this.imgsPath}/marker-icon-2x-${color}.png`;
                     options.shadowUrl = `${this.imgsPath}/marker-shadow.png`;
                 }
 
@@ -328,7 +336,7 @@ document.addEventListener('livewire:init', () => {
             },
 
             bindPopup(layer, popupConfig) {
-                let html = `<div class="custom-popup-${this.mapId}">`;
+                let html = '<div class="custom-popup">';
 
                 if (popupConfig.title) {
                     html += `<h4>${popupConfig.title}</h4>`;
@@ -373,13 +381,13 @@ document.addEventListener('livewire:init', () => {
                 }
 
                 if (this.layerControl) {
-                    map.removeControl(this.layerControl);
+                    Alpine.raw(this.map).removeControl(this.layerControl);
                 }
 
                 this.layerControl = L.control.layers(
                     this.baseLayers,
                     overlays,
-                ).addTo(map);
+                ).addTo(Alpine.raw(this.map));
             },
 
             setupMapControls() {
@@ -410,17 +418,17 @@ document.addEventListener('livewire:init', () => {
 
             setupAttributionControl() {
                 const attribution = new L.control.attribution();
-                attribution.addTo(map);
+                attribution.addTo(Alpine.raw(this.map));
             },
 
             setupScaleControl() {
                 const scale = new L.control.scale();
-                scale.addTo(map);
+                scale.addTo(Alpine.raw(this.map));
             },
 
             setupZoomControl() {
                 const zoom = new L.control.zoom();
-                zoom.addTo(map);
+                zoom.addTo(Alpine.raw(this.map));
             },
 
             setupSearchControl() {
@@ -439,7 +447,7 @@ document.addEventListener('livewire:init', () => {
                     },
                 });
 
-                search.addTo(map);
+                search.addTo(Alpine.raw(this.map));
             },
 
             setupFullscreenControl() {
@@ -449,13 +457,10 @@ document.addEventListener('livewire:init', () => {
                     forceSeparateButton: true,
                 });
 
-                fullscreen.addTo(map);
+                fullscreen.addTo(Alpine.raw(this.map));
             },
 
             setupDrawControl() {
-                this.editableLayers = new L.FeatureGroup();
-                this.editableLayers.addTo(map);
-
                 const draw = new L.Control.Draw({
                     draw: {
                         marker: {
@@ -523,55 +528,79 @@ document.addEventListener('livewire:init', () => {
                 L.drawLocal.edit.handlers.edit.tooltip.subtext = this.getTranslation('edit_handlers_edit_tooltip_subtext', 'Click cancel to undo changes.');
                 L.drawLocal.edit.handlers.remove.tooltip.text = this.getTranslation('edit_handlers_remove_tooltip_text', 'Click a feature to remove it.');
 
-                draw.addTo(map);
+                draw.addTo(Alpine.raw(this.map));
             },
 
             setupEventHandlers() {
-                map.on('click', (e) => {
+                Alpine.raw(this.map).on('click', (e) => {
                     if (this.isDrawing) return;
 
                     const coords = e.latlng;
-                    $wire.onMapClick(
-                        coords['lat'],
-                        coords['lng']
-                    );
+                    if (componentKey) {
+
+                        if (this.pickMarker) {
+                            this.pickMarker.removeFrom(Alpine.raw(this.map));
+                        }
+
+                        this.pickMarker = this.createMarker({
+                            lat: coords['lat'],
+                            lng: coords['lng']
+                        });
+
+                        this.pickMarker.addTo(Alpine.raw(this.map));
+
+                        $wire.callSchemaComponentMethod(
+                            componentKey,
+                            'handleMapClick',
+                            {
+                                latitude: coords['lat'],
+                                longitude: coords['lng']
+                            }
+                        );
+                    } else {
+                        $wire.call(
+                            'handleMapClick',
+                            coords['lat'],
+                            coords['lng']
+                        );
+                    }
                 });
 
-                map.on('draw:drawstart', () => {
+                Alpine.raw(this.map).on('draw:drawstart', () => {
                     this.isDrawing = true;
                 });
 
-                map.on('draw:drawstop', () => {
+                Alpine.raw(this.map).on('draw:drawstop', () => {
                     this.isDrawing = false;
                 });
 
-                map.on('draw:canceled', () => {
+                Alpine.raw(this.map).on('draw:canceled', () => {
                     this.isDrawing = false;
                 });
 
-                map.on('draw:editstart', () => {
+                Alpine.raw(this.map).on('draw:editstart', () => {
                     this.isDrawing = true;
                 });
 
-                map.on('draw:editstop', () => {
+                Alpine.raw(this.map).on('draw:editstop', () => {
                     this.isDrawing = false;
                 });
 
-                map.on('draw:deletestart', () => {
+                Alpine.raw(this.map).on('draw:deletestart', () => {
                     this.isDrawing = true;
                 });
 
-                map.on('draw:deletestop', () => {
+                Alpine.raw(this.map).on('draw:deletestop', () => {
                     this.isDrawing = false;
                 });
 
-                map.on('draw:created', (e) => {
-                    e.layer.addTo(Alpine.raw(this.editableLayers));
+                Alpine.raw(this.map).on('draw:created', (e) => {
+                    Alpine.raw(this.editableLayers).addLayer(e.layer);
                 });
             },
 
             setupLivewireListeners() {
-                window.addEventListener(`update-leaflet-${this.mapId}`, (event) => {
+                window.addEventListener(`update-leaflet-${this.config.mapId}`, (event) => {
                     this.updateMapData(event.detail.config);
                 });
             },
@@ -591,25 +620,24 @@ document.addEventListener('livewire:init', () => {
             },
 
             clearLayers() {
-                this.layers.forEach(({ layer, data }) => {
-                    console.log(Alpine.raw(layer));
-                    if (data.group) {
-                        this.layerGroups[data.group].layer.removeLayer(Alpine.raw(layer));
+                this.layers.forEach(layer => {
+                    if (layer.options.group) {
+                        Alpine.raw(this.layerGroups[data.group].layer).removeLayer(Alpine.raw(layer));
                     } else {
-                        map.removeLayer(Alpine.raw(layer));
+                        Alpine.raw(this.map).removeLayer(Alpine.raw(layer));
                     }
                 });
 
                 this.layers = [];
 
                 Object.values(this.layerGroups).forEach(({ layer }) => {
-                    map.removeLayer(Alpine.raw(layer));
+                    Alpine.raw(this.map).removeLayer(Alpine.raw(layer));
                 });
 
                 this.layerGroups = {};
 
                 if (this.layerControl) {
-                    map.removeControl(this.layerControl);
+                    Alpine.raw(this.map).removeControl(this.layerControl);
                     this.layerControl = null;
                 }
             },

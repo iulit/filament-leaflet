@@ -6,7 +6,7 @@ use Closure;
 use EduardoRibeiroDev\FilamentLeaflet\Enums\Color;
 use EduardoRibeiroDev\FilamentLeaflet\Support\BaseLayerGroup;
 use EduardoRibeiroDev\FilamentLeaflet\Support\Markers\Marker;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasColor;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasColor;
 use Illuminate\Database\Eloquent\Model;
 
 class MarkerCluster extends BaseLayerGroup

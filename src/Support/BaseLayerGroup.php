@@ -2,7 +2,7 @@
 
 namespace EduardoRibeiroDev\FilamentLeaflet\Support;
 
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasOptions;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasOptions;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Traits\Conditionable;

@@ -4,8 +4,8 @@ namespace EduardoRibeiroDev\FilamentLeaflet\Support\Groups;
 
 use EduardoRibeiroDev\FilamentLeaflet\Support\BaseLayerGroup;
 use EduardoRibeiroDev\FilamentLeaflet\Support\Shapes\Polygon;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasColor;
-use EduardoRibeiroDev\FilamentLeaflet\Traits\HasFillColor;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasColor;
+use EduardoRibeiroDev\FilamentLeaflet\Concerns\HasFillColor;
 
 class FeatureGroup extends BaseLayerGroup
 {
